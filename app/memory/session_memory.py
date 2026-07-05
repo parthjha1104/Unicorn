@@ -1,8 +1,8 @@
 class SessionMemomry :
     def __init__(self):
-        self.message = []
+        self.messages = []
     def add(self, role : str, content: str) :
-        self.message.append(
+        self.messages.append(
             {
                 "role": role,
                 "content": content
@@ -10,4 +10,7 @@ class SessionMemomry :
             }
         )
     def get(self):
-        return self.message
+        return self.messages
+    def clear(self):
+        self.messages.clear()
+    

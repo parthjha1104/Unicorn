@@ -1,5 +1,6 @@
 from app.providers.mock_providers import MockProvider
 
+
 class ProviderFactory:
 
     @staticmethod
