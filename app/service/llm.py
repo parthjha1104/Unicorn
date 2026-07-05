@@ -1,5 +1,6 @@
-from app.core.base_llm import BaseLLMProvider
+from app.providers.providers_factory import ProviderFactory
 
-class LLMService(BaseLLMProvider) : 
-    def generate(self, message: str) -> str:
-        return f"NTD-Core Recived : {message}"
+class LLMService: 
+    def generate(self, message: str):
+        provider = ProviderFactory.get_provider()
+        return provider.generate(message)
