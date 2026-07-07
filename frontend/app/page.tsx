@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
 type Message = {
@@ -11,13 +11,22 @@ type Message = {
 export default function Home() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   async function sendMessage() {
     if (!message.trim()) return;
 
     const userMessage = message;
 
-    // Add user message immediately
+    // Show user message immediately
     setMessages((prev) => [
       ...prev,
       {
@@ -25,8 +34,10 @@ export default function Home() {
         content: userMessage,
       },
     ]);
+    
 
     setMessage("");
+    setLoading(true);
 
     try {
       const apiResponse = await fetch("http://127.0.0.1:8000/chat", {
@@ -48,26 +59,31 @@ export default function Home() {
           content: data.response,
         },
       ]);
+      setLoading(false);
     } catch (error) {
+      console.error(error);
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "❌ Unable to contact NTM-VA backend.",
+          content: "❌ Unable to contact the backend.",
         },
       ]);
-
-      console.error(error);
+      setLoading(false);
     }
   }
 
   return (
     <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center p-6">
-      <h1 className="text-4xl font-bold mb-6">NTM-VA</h1>
+      <h1 className="text-4xl font-bold mb-6">
+        NTM-VA
+      </h1>
 
       <div className="w-full max-w-3xl bg-gray-900 rounded-xl shadow-lg p-6">
 
-        <div className="h-96 overflow-y-auto border border-gray-700 rounded-lg p-4 mb-4">
+        {/* Chat Window */}
+        <div className="h-[500px] overflow-y-auto border border-gray-700 rounded-lg p-4 mb-4 space-y-3">
 
           {messages.length === 0 ? (
             <p className="text-gray-400">
@@ -77,7 +93,7 @@ export default function Home() {
             messages.map((msg, index) => (
               <div
                 key={index}
-                className={`mb-4 flex ${
+                className={`flex ${
                   msg.role === "user"
                     ? "justify-end"
                     : "justify-start"
@@ -97,15 +113,29 @@ export default function Home() {
               </div>
             ))
           )}
+          {loading &&(
+            <div className="flex justify-start">
+              <div className="max-w-[75%] rounded-xl p-3 bg-gray-800 text-gray-300 animate-pul">
+                NTM-VA is thinking...
+              </div>
+            </div>
+          )
+
+          }
+
+          <div ref={bottomRef} />
 
         </div>
 
+        {/* Input */}
         <div className="flex gap-2">
+
           <input
+            disabled={loading}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="flex-1 rounded-lg bg-gray-800 p-3 outline-none"
             placeholder="Type your message..."
+            className="flex-1 rounded-lg bg-gray-800 p-3 outline-none"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
@@ -114,11 +144,17 @@ export default function Home() {
           />
 
           <button
+            disabled={loading}
             onClick={sendMessage}
-            className="bg-blue-600 px-6 rounded-lg hover:bg-blue-700 transition"
+            className={`px-6 rounded-lg transition ${
+              loading
+                ? "bg-gray-700 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Send
+            {loading ? "Thinking" : "Send"}
           </button>
+
         </div>
 
       </div>
